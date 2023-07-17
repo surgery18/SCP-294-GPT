@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP-294 Emulator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        #vendingMachine {
+            background-color: #2a2a2a;
+            color: white;
+            border-radius: 20px;
+            padding: 20px;
+            height: 90vh;
+            margin: 5vh auto;
+            max-width: 600px;
+        }
+        #vendingMachine h1 {
+            text-align: center;
+        }
+        #outputField {
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100px;
+            border: 3px solid #fff; /* Adjust the border thickness and color here */
+            padding: 5px;
+            margin-bottom: 15px;
+            color: #fff; /* Changing text color to white for better visibility against dark backgrounds */
+            background-color: #000; /* You might want to change the background color to a darker one so that the white text and border stand out better */
+            max-height: 290px;
+            overflow-y: auto;
+        }
+
+      
+        #dispenseButton {
+            width: 100%;
+        }
+      
+        
+        @keyframes pour {
+            0% {height: 0%;}
+            100% {height: 100%;}
+        }
+
+        #cupContainer {
+            width: 50px;
+            height: 100px;  /* Adjusted the height here */
+            position: absolute;
+            bottom: 50px;
+            left: calc(50% - 25px);
+        }
+
+        #liquidContainer {
+            width: 40px;
+            height: 100px;  /* Adjusted the height here */
+            position: absolute;
+            bottom: 0px;  /* Adjusted the position here */
+            left: 5px;
+            overflow: hidden;
+        }
+
+        #liquid {
+            background-color: #007bff;
+            width: 100%;
+            height: 0%;
+            position: absolute;
+            bottom: 0;
+            animation: pour 2s forwards;
+            display: none;
+        }
+
+        #pouringLiquid {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: calc(50% - 5px);
+            display: none;
+            animation: wobble 2s infinite;
+            filter: url(#turbulence);
+        }
+
+        @keyframes wobble {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(2px, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="vendingMachine">
+        <h1>SCP-294</h1>
+        <h3>OpenAI Key is needed to use this app</h3>
+        <input id="apiKeyField" type="text" class="form-control mb-4" placeholder="Enter your OpenAI API Key">
+        <h3>Type your drink request below:</h3> <!-- Added title here -->  
+        <input id="inputField" type="text" class="form-control mb-4" placeholder="Type your request">
+        <div id="outputField"></div>
+        <button id="dispenseButton" class="btn btn-primary">Dispense</button>
+        <div id="cupContainer">
+            <div id="liquidContainer">
+                <div id="liquid"></div>
+            </div>
+            <svg id="pouringLiquid" width="10" height="140" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="turbulence" x="0" y="0" width="100%" height="100%">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="2" result="turbulence"/>
+                        <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="50" xChannelSelector="R" yChannelSelector="G"/>
+                    </filter>
+                </defs>
+                <polygon points="0,0 10,0 5,140" fill="#007bff"/>
+            </svg>
+            <svg id="cup" width="50" height="150" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="50" height="150" fill="white" stroke="black" stroke-width="2"/>
+            </svg>
+        </div>
+      
+      <!-- Modal -->
+      <div id="errorModal">
+        <div class="modal-content">
+          <span id="closeModal">&times;</span>
+          <p>An OpenAI API Key is required to use this app.</p>
+        </div>
+      </div>
+
+      <style>
+      #errorModal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        color: black; /* This makes the text black */
+      }
+
+      #closeModal {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      </style>
+    </div>
+
+    <script>
+        const apiKeyField = document.getElementById('apiKeyField');
+        const inputField = document.getElementById('inputField');
+        const dispenseButton = document.getElementById('dispenseButton');
+        const outputField = document.getElementById('outputField');
+        const liquidContainer = document.getElementById('liquidContainer');
+        const liquid = document.getElementById('liquid');
+        const pouringLiquid = document.getElementById('pouringLiquid');
+      
+        // Function to implement the typewriter effect
+        function typeWrite(text) {
+          let i = 0;
+          (function writer() {
+            if(i < text.length) {
+              document.getElementById('outputField').innerHTML += text.charAt(i);
+              i++;
+              setTimeout(writer, 50);  // Wait for 100ms before writing the next character
+            }
+          })();
+        }
+
+        inputField.addEventListener('keyup', function(event) {
+            if (event.keyCode === 13) {
+                dispenseButton.click();
+            }
+        });
+      
+        document.getElementById('closeModal').addEventListener('click', function() {
+          document.getElementById('errorModal').style.display = "none";
+        });
+
+        dispenseButton.addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKeyField').value;
+            if (apiKey === '') {
+                // If the API key is empty, show the modal
+                document.getElementById('errorModal').style.display = "block";
+                return;
+            }
+          
+            outputField.textContent = 'Dispensing...';
+            liquid.style.display = 'block';
+            pouringLiquid.style.display = 'block';
+
+            const messages = [
+                {role: "system", content: "You are playing the role of SCP-294, a machine that can dispense any requested item and describe its effects."},
+                {role: "user", content: `SCP-294, please dispense ${inputField.value}`},
+                {role: "system", content: "What happens when someone uses this?"}
+            ];
+
+            try {
+                const response = await fetch(
+                    'https://api.openai.com/v1/chat/completions',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKeyField.value}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-3.5-turbo-16k',
+                            messages: messages
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                const message = data.choices[0].message.content;
+                outputField.textContent = '';
+                typeWrite(message);
+                inputField.value = '';
+                liquid.style.display = 'none';
+                pouringLiquid.style.display = 'none';
+            } catch (error) {
+                console.error(error);
+                outputField.textContent = 'An error occurred.';
+                liquid.style.display = 'none';
+                pouringLiquid.style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>
