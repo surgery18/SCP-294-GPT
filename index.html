@@ -7,90 +7,86 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
+          background: #f5f5f5;
+          font-family: Arial, sans-serif;
         }
-        #vendingMachine {
-            background-color: #2a2a2a;
-            color: white;
-            border-radius: 20px;
-            padding: 20px;
-            height: 90vh;
-            margin: 5vh auto;
-            max-width: 600px;
-        }
-        #vendingMachine h1 {
-            text-align: center;
-        }
-        #vendingMachine h2 {
-            text-align: center;
-        }
-        #outputField {
-            font-family: 'Courier New', Courier, monospace;
-            min-height: 100px;
-            border: 3px solid #fff; /* Adjust the border thickness and color here */
-            padding: 5px;
-            margin-bottom: 15px;
-            color: #fff; /* Changing text color to white for better visibility against dark backgrounds */
-            background-color: #000; /* You might want to change the background color to a darker one so that the white text and border stand out better */
-            max-height: 290px;
-            overflow-y: auto;
-        }
-
-      
-        #dispenseButton {
-            width: 100%;
-        }
-      
         
-        @keyframes pour {
-            0% {height: 0%;}
-            100% {height: 100%;}
+        #vendingMachine {
+          background-color: #2a2a2a;
+          color: white;
+          border-radius: 20px;
+          padding: 20px;
+          height: 90vh;
+          margin: 5vh auto;
+          max-width: 600px;
+          
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
-
-        #cupContainer {
-            width: 50px;
-            height: 100px;  /* Adjusted the height here */
-            position: absolute;
-            bottom: 50px;
-            left: calc(50% - 25px);
+        
+        #vendingMachine h1 {
+          text-align: center;
         }
-
-        #liquidContainer {
-            width: 40px;
-            height: 100px;  /* Adjusted the height here */
-            position: absolute;
-            bottom: 0px;  /* Adjusted the position here */
-            left: 5px;
-            overflow: hidden;
+        
+        #vendingMachine h2 {
+          text-align: center;
         }
-
-        #liquid {
-            background-color: #007bff;
-            width: 100%;
-            height: 0%;
-            position: absolute;
-            bottom: 0;
-            animation: pour 2s forwards;
-            display: none;
+        
+        #vendingMachine h3 {
+          text-align: center;
         }
-
-        #pouringLiquid {
-            position: absolute;
-            bottom: calc(100% + 10px);
-            left: calc(50% - 5px);
-            display: none;
-            animation: wobble 2s infinite;
-            filter: url(#turbulence);
+        
+        #apiKeyField {
+          width: 100%;
         }
-
-        @keyframes wobble {
-            0%, 100% {
-                transform: translate(0, 0);
-            }
-            50% {
-                transform: translate(2px, 0);
-            }
+        
+        #inputField {
+          width: 100%;
+        }
+        
+        #outputField {
+          font-family: 'Courier New', Courier, monospace;
+          min-height: 100px;
+          border: 3px solid #fff;
+          padding: 5px;
+          margin-bottom: 15px;
+          color: #fff;
+          background-color: #000;
+          max-height: 290px;
+          overflow-y: auto;
+        }
+        
+        #dispenseButton {
+          width: 100%;
+        }
+        
+        #errorModal {
+          display: none; 
+          position: fixed; 
+          z-index: 1;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+          background-color: #fefefe;
+          margin: 15% auto; 
+          padding: 20px;
+          border: 1px solid #888;
+          width: 80%;
+          color: black;
+        }
+        
+        #closeModal {
+          color: #aaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
         }
     </style>
 </head>
@@ -104,24 +100,26 @@
         <input id="inputField" type="text" class="form-control mb-4" placeholder="Type your request">
         <div id="outputField"></div>
         <button id="dispenseButton" class="btn btn-primary">Dispense</button>
-        <div id="cupContainer">
-            <div id="liquidContainer">
-                <div id="liquid"></div>
-            </div>
-            <svg id="pouringLiquid" width="10" height="140" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <filter id="turbulence" x="0" y="0" width="100%" height="100%">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="2" result="turbulence"/>
-                        <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="50" xChannelSelector="R" yChannelSelector="G"/>
-                    </filter>
-                </defs>
-                <polygon points="0,0 10,0 5,140" fill="#007bff"/>
-            </svg>
-            <svg id="cup" width="50" height="100" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0" y="0" width="50" height="100" fill="white" stroke="black" stroke-width="2"/>
-            </svg>
-        </div>
-      
+        <svg viewBox="0 0 100 280">
+          
+          <defs>
+            <filter id="turbulence">
+              <feTurbulence id="turb" baseFrequency="0" result="turb" />
+              <feDisplacementMap in="SourceGraphic" in2="turb" scale="5"/>
+            </filter>
+          </defs>
+
+          <rect x="20" y="180" width="60" height="100" fill="white" stroke="black"/>
+
+          <rect id="liquid" x="25" y="180" width="50" height="100" fill="blue"/>
+
+          <polygon id="pouringLiquid" filter="url(#turbulence)" points="15,0 25,0 20,140" fill="blue"
+                   transform="translate(30, 80)" />
+
+        </svg>
+
+
+
       <!-- Modal -->
       <div id="errorModal">
         <div class="modal-content">
@@ -129,36 +127,6 @@
           <p>An OpenAI API Key is required to use this app.</p>
         </div>
       </div>
-
-      <style>
-      #errorModal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-      }
-
-      .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        color: black; /* This makes the text black */
-      }
-
-      #closeModal {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-      }
-      </style>
     </div>
 
     <script>
@@ -169,7 +137,34 @@
         const liquidContainer = document.getElementById('liquidContainer');
         const liquid = document.getElementById('liquid');
         const pouringLiquid = document.getElementById('pouringLiquid');
+        let baseFreq = 0;
+         let showing = false;
+
+        // Wait for load
+        document.addEventListener("DOMContentLoaded", () => {
+          
+          const turbFilter = document.getElementById("turb");
+          
+          function animateTurbulence() {
+            if (showing) {
+              baseFreq += 0.01;
+              // Limit frequency
+              if (baseFreq > 1) {
+                baseFreq = 0;
+              }  
+              // Update filter
+              turbFilter.setAttribute("baseFrequency", baseFreq);
+            }
+            requestAnimationFrame(animateTurbulence);
+          }
+          
+          animateTurbulence();
+        });
       
+        // Init positions  
+        liquid.setAttribute("transform", "translate(0, 100)");
+        pouringLiquid.style.display = "none";
+
         // Function to implement the typewriter effect
         function typeWrite(text) {
           let i = 0;
@@ -201,8 +196,17 @@
             }
           
             outputField.textContent = 'Dispensing...';
-            liquid.style.display = 'block';
-            pouringLiquid.style.display = 'block';
+            showing = true;
+            pouringLiquid.style.display = "block";
+            
+            liquid.animate([
+              {transform: 'translate(0, 100)'},
+              {transform: 'translate(0, 0)'}
+            ], {
+              duration: 1500,
+              fill: 'forwards'
+            });
+
 
             const messages = [
                 {role: "system", content: "You are playing the role of SCP-294, a machine that can dispense any requested item and describe its effects."},
@@ -232,14 +236,15 @@
                 outputField.textContent = '';
                 typeWrite(message);
                 inputField.value = '';
-                liquid.style.display = 'none';
-                pouringLiquid.style.display = 'none';
             } catch (error) {
                 console.error(error);
                 outputField.textContent = 'An error occurred.';
-                liquid.style.display = 'none';
-                pouringLiquid.style.display = 'none';
             }
+          
+            // Init positions  
+            liquid.setAttribute("transform", "translate(0, 100)");
+            pouringLiquid.style.display = "none";
+            showing = false;
         });
     </script>
 
